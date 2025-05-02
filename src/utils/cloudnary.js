@@ -1,10 +1,10 @@
-import { v2 as cloudnary } from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
 //file system to handel file upload,delete
-import fs from fs
+import fs from 'fs'
 
 
-// cloudnary configuration
+// cloudinary configuration
 cloudinary.config({ 
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
@@ -17,14 +17,14 @@ const uploadFileOnCloudnary = async (localFilePath) =>{
   try {
     if(!localFilePath) return "file path not found"
 
-    // upload file on cloudnary
-    const response= await cloudnary.uploader.upload(localFilePath,
+    // upload file on cloudinary
+    const response= await cloudinary.uploader.upload(localFilePath,
       {
         resource_type :"auto"
       }
     )
     // file uploaded successfully
-    console.log("file uploaded on cloudnary successfully",response.url)
+    console.log("file uploaded on cloudinary successfully",response.url)
 
     return response;
     

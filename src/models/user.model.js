@@ -48,9 +48,9 @@ const userSchema = new Schema({
   refreshToken : {
     type : String
   },
-  timestamps: true, // it will create createdAt and updatedAt field in db
+},{
 
-
+    timestamps: true, // it will create createdAt and updatedAt field in db
 })
 
 // we dont write arrow function in pre save hook because we need to access this keyword which is pointing to the userSchema object
@@ -65,7 +65,7 @@ userSchema.pre("save",async function (next) {
 // More salt rounds = 🔒 stronger security
 // But also = 🐢 slower hashing (on purpose, to make brute-force attacks harder)
 
-  this.password=bcrypt.hash(this.password,10)
+  this.password=await bcrypt.hash(this.password,10)
   next()
 })
 
