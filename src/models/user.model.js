@@ -55,7 +55,7 @@ const userSchema = new Schema({
 
 // we dont write arrow function in pre save hook because we need to access this keyword which is pointing to the userSchema object
 userSchema.pre("save",async function (next) {
-  if(!this.Modified("password")) return next()
+  if(!this.isModified("password")) return next()
 
 
 // 🔐 What is 10?

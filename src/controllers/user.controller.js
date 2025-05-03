@@ -18,12 +18,17 @@ const registerUser = asyncHandler(async(req,res)=>{
   // check fro user creation
   // send response
 
-  res.status(200).json({
-    message : "ok"
-  })
+  // res.status(200).json({
+  //   message : "ok"
+  // })
 
   const {username,email,fullName,password}=req.body
   console.log("email",email);
+  console.log("fullname",fullName);
+  console.log("username",username);
+  console.log("password",password);
+
+  
 
   // check for validations
  if(
@@ -33,7 +38,7 @@ const registerUser = asyncHandler(async(req,res)=>{
  }
 
 //  check for existing user
- const existedUser = User.findOne({
+ const existedUser =await User.findOne({
   $or : [{ username }, { email }]
  })
 
@@ -52,10 +57,15 @@ const registerUser = asyncHandler(async(req,res)=>{
 
 // we need first property of that file
 const avatarLocalpath=req?.files?.avatar[0]?.path
+// const files=req.files
 
-console.log(files.path,"file path avatar image");
+// console.log(files.path,"file path avatar image");
 
 const coverImageLocalpath = req?.files?.coverImage[0]?.path
+console.log("files path avatar image:", req?.files);
+
+console.log("Received files:", req.files);
+
 
 
 // validation for avatar image
@@ -81,9 +91,13 @@ const user = await User.create({
   coverImage : coverImage?.url ?? "",
   email,
   password,
-  username: username.toLowercse()
+  username: username.toLowerCase()
 
 })
+
+console.log("Body:", req.body);
+console.log("Files:", req.files);
+
 
 
 // select is a method which will remove this two fileds

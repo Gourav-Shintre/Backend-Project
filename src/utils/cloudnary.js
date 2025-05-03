@@ -29,6 +29,7 @@ const uploadFileOnCloudnary = async (localFilePath) =>{
     return response;
     
   } catch (error) {
+    console.error("Cloudinary upload error:", error);
     fs.unlinkSync(localFilePath) // it will remove that saved local file from locally
     return null
   }
