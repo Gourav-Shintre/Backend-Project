@@ -23,10 +23,10 @@ const registerUser = asyncHandler(async(req,res)=>{
   // })
 
   const {username,email,fullName,password}=req.body
-  console.log("email",email);
-  console.log("fullname",fullName);
-  console.log("username",username);
-  console.log("password",password);
+  // console.log("email",email);
+  // console.log("fullname",fullName);
+  // console.log("username",username);
+  // console.log("password",password);
 
   
 
@@ -46,7 +46,7 @@ const registerUser = asyncHandler(async(req,res)=>{
   throw new ApiError(409,"User with this email or username already exist")
  }
 
- console.log(existedUser , "existeing user");
+//  console.log(existedUser , "existeing user");
  
 
 
@@ -61,10 +61,13 @@ const avatarLocalpath=req?.files?.avatar[0]?.path
 
 // console.log(files.path,"file path avatar image");
 
-const coverImageLocalpath = req?.files?.coverImage[0]?.path
-console.log("files path avatar image:", req?.files);
+// const coverImageLocalpath = req?.files?.coverImage[0]?.path
+let coverImageLocalpath ;
+if(req.files && (Array.isArray(req.files.coverImage)) && req.files.coverImage.length >0){
+  coverImageLocalpath = req.files.coverImage[0].path
 
-console.log("Received files:", req.files);
+}
+
 
 
 
@@ -95,8 +98,7 @@ const user = await User.create({
 
 })
 
-console.log("Body:", req.body);
-console.log("Files:", req.files);
+// console.log("Body:", req.body);
 
 
 
