@@ -203,7 +203,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutuser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
-    req.user._id,
+    req.user?._id,
     {
       $set: {
         refreshToken: undefined,
@@ -304,7 +304,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .status(200)
     .json(200, req.user, "current user fetched successfully");
 });
-
+  
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email } = req.body;
 
@@ -312,7 +312,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user =await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -364,6 +364,114 @@ const updateAvatar = asyncHandler(async (req, res) => {
   ))
 });
 
+const updateCoverImage = asyncHandler(async(req,res)=>{
+  const coverImageLocalPath = req.files?.path
+  if(!coverImageLocalPath){
+    throw new ApiError(400,"CoverImage file is missing")
+  }
+
+ const coverImage = await uploadFileOnCloudnary(coverImageLocalPath)
+ if (!coverImage.url) {
+  throw new ApiError(400, "Error while uploading on cloudnary");
+}
+const user= await User.findByIdAndUpdate(
+  req.user?._id,
+  {
+    $set: {
+      coverImage : coverImage.url,
+    },
+  },
+  {
+    new: true,
+  },
+).select("-password");
+
+return res
+.status(200)
+.json(new ApiResponse(
+  200,
+  user,
+  "cover image updated successfully"
+))
+})
+
+const getUserChannelProfile = asyncHandler (async(req,res)=>{
+
+  const{username} = req.params
+  if(!username?.trim()){
+    throw new ApiError(400,"username is missing")
+  }
+
+  const channel = await User.aggregate([
+    {
+      // it matches username in mongo document
+      $match : {
+        username : username?.toLowerCase()
+      }
+    },
+    {
+      // it will join the table 
+      $lookup:  {
+        from  : "subscription",
+        localField : "_id",
+        foreignField : "channel",
+        as : "subscribers"
+      }
+    },
+    {
+      $lookup:  {
+        from  : "subscription",
+        localField : "_id",
+        foreignField : "subscriber",
+        as : "subscribedTo"
+      }
+    },
+    {
+      // it will add fields to document on previous document 
+      $addFields : {
+        subscribersCount : {
+          // it will count the subscribers
+          $size : "$subscribers"
+        },
+        {
+          channelSubscribed : {
+            $size : "$subscribedTo"
+          }
+        },
+        {
+          // it will give true false (e.g if user subscribed to channel orr not)
+          isSubscribed : {
+            $cond : {
+              // in willcheck in object  and array also
+              if : {$in : [req.user?._id , "$subscribers.subscriber "]},
+              then : true,
+              else : false
+            }
+          }
+           
+        }
+      }
+    },
+    {
+      // it will gave selected fileds
+      $project : {
+        fullName : 1,
+        username : 1,
+        subscribersCount : 1,
+        channelSubscribed :1,
+        avatar : 1,
+        coverImage : 1
+      }
+    }
+
+
+  ])
+
+
+})
+
+
+
 export {
   registerUser,
   loginUser,
@@ -372,5 +480,7 @@ export {
   changeCurrentpassword,
   getCurrentUser,
   updateAccountDetails,
-  updateAvatar
+  updateAvatar,
+  updateCoverImage,
+  getUserChannelProfile
 };
