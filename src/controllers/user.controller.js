@@ -5,6 +5,8 @@ import { uploadFileOnCloudnary } from "../utils/cloudnary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { validateHeaderName } from "http";
+import { userInfo } from "os";
+import mongoose from "mongoose";
 
 // generate refrrsh and acess token
 const generateRfreshAndAccessToken = async (userId) => {
@@ -304,7 +306,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .status(200)
     .json(200, req.user, "current user fetched successfully");
 });
-  
+
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email } = req.body;
 
@@ -312,7 +314,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const user =await User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -343,11 +345,11 @@ const updateAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading on cloudnary");
   }
 
-  const user= await User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
-        avatar : avatar.url,
+        avatar: avatar.url,
       },
     },
     {
@@ -356,121 +358,158 @@ const updateAvatar = asyncHandler(async (req, res) => {
   ).select("-password");
 
   return res
-  .status(200)
-  .json(new ApiResponse(
-    200,
-    user,
-    "avatar image updated successfully"
-  ))
+    .status(200)
+    .json(new ApiResponse(200, user, "avatar image updated successfully"));
 });
 
-const updateCoverImage = asyncHandler(async(req,res)=>{
-  const coverImageLocalPath = req.files?.path
-  if(!coverImageLocalPath){
-    throw new ApiError(400,"CoverImage file is missing")
+const updateCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.files?.path;
+  if (!coverImageLocalPath) {
+    throw new ApiError(400, "CoverImage file is missing");
   }
 
- const coverImage = await uploadFileOnCloudnary(coverImageLocalPath)
- if (!coverImage.url) {
-  throw new ApiError(400, "Error while uploading on cloudnary");
-}
-const user= await User.findByIdAndUpdate(
-  req.user?._id,
-  {
-    $set: {
-      coverImage : coverImage.url,
+  const coverImage = await uploadFileOnCloudnary(coverImageLocalPath);
+  if (!coverImage.url) {
+    throw new ApiError(400, "Error while uploading on cloudnary");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage.url,
+      },
     },
-  },
-  {
-    new: true,
-  },
-).select("-password");
+    {
+      new: true,
+    },
+  ).select("-password");
 
-return res
-.status(200)
-.json(new ApiResponse(
-  200,
-  user,
-  "cover image updated successfully"
-))
-})
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "cover image updated successfully"));
+});
 
-const getUserChannelProfile = asyncHandler (async(req,res)=>{
-
-  const{username} = req.params
-  if(!username?.trim()){
-    throw new ApiError(400,"username is missing")
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username?.trim()) {
+    throw new ApiError(400, "username is missing");
   }
 
   const channel = await User.aggregate([
     {
       // it matches username in mongo document
-      $match : {
-        username : username?.toLowerCase()
-      }
+      $match: {
+        username: username?.toLowerCase(),
+      },
     },
     {
-      // it will join the table 
-      $lookup:  {
-        from  : "subscription",
-        localField : "_id",
-        foreignField : "channel",
-        as : "subscribers"
-      }
+      // it will join the table
+      $lookup: {
+        from: "subscription",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
     },
     {
-      $lookup:  {
-        from  : "subscription",
-        localField : "_id",
-        foreignField : "subscriber",
-        as : "subscribedTo"
-      }
+      $lookup: {
+        from: "subscription",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
     },
     {
-      // it will add fields to document on previous document 
-      $addFields : {
-        subscribersCount : {
+      // it will add fields to document on previous document
+      $addFields: {
+        subscribersCount: {
           // it will count the subscribers
-          $size : "$subscribers"
+          $size: "$subscribers",
         },
-        {
-          channelSubscribed : {
-            $size : "$subscribedTo"
-          }
+        channelSubscribed: {
+          // it will count the channels this user is subscribed to
+          $size: "$subscribedTo",
         },
-        {
-          // it will give true false (e.g if user subscribed to channel orr not)
-          isSubscribed : {
-            $cond : {
-              // in willcheck in object  and array also
-              if : {$in : [req.user?._id , "$subscribers.subscriber "]},
-              then : true,
-              else : false
-            }
-          }
-           
-        }
-      }
+        isSubscribed: {
+          // it will give true/false (e.g. if user subscribed to channel or not)
+          $cond: {
+            // $in will check in object and array also
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
     },
     {
       // it will gave selected fileds
-      $project : {
-        fullName : 1,
-        username : 1,
-        subscribersCount : 1,
-        channelSubscribed :1,
-        avatar : 1,
-        coverImage : 1
+      $project: {
+        fullName: 1,
+        username: 1,
+        subscribersCount: 1,
+        channelSubscribed: 1,
+        avatar: 1,
+        coverImage: 1,
+      },
+    },
+  ]);
+});
+
+const getWatchHistory = asyncHandler (async (req,res)=>{
+  const user = await User.aggregate([
+    {
+      $match : {
+        // because mongo db gives _id in string format son we need to convert it into object id
+        _id : new mongoose.Types.ObjectId(req.user._id)
       }
+    },
+    {
+      $lookup : {
+        from : "videos",  //in database Video is converted into videos 
+        localField : "watchHistory",
+        foreignField : "_id",
+        as : "watchHistory",
+        pipeline : [
+          {
+            $lookup : {
+              from : "users",
+              localField : "owner",
+              foreignField : "_id",
+              as  : "owner",
+              pipeline : [
+                {
+                  $project : {
+                    fullName : 1,// 1 means include this field
+                    username : 1,
+                    avatar : 1
+
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $addFields : {
+              owner : {
+                $first : "$owner"
+              }
+            }
+          }
+        ]
+      }
+
     }
-
-
   ])
 
-
+  return res.status(200)
+  .json(
+    new ApiResponse(
+      200,
+      user[0].watchHistory,
+      "Watchhistory fetched Successfully"
+    )
+  )
 })
-
-
 
 export {
   registerUser,
@@ -482,5 +521,6 @@ export {
   updateAccountDetails,
   updateAvatar,
   updateCoverImage,
-  getUserChannelProfile
+  getUserChannelProfile,
+  getWatchHistory
 };
