@@ -9,3 +9,32 @@ REFRESH_TOKEN_EXPIRY=7d
 CLOUD_NAME = dg7giklrz
 CLOUD_API_KEY =957891476751117
 CLOUD_API_SECRET=Qc1vDJ9DyVTRonQYvDvnQym7I9g
+
+
+
+// setting.json
+{
+  "workbench.colorTheme": "Default Dark+",
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "liveServer.settings.donotShowInfoMsg": true,
+  "editor.tabSize": 2,
+  "liveServer.settings.donotVerifyTags": true,
+  "diffEditor.hideUnchangedRegions.enabled": true,
+  "code-runner.runInTerminal": true,
+  "css.lint.unknownAtRules": "ignore",
+  "files.autoSave": "afterDelay",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "workbench.iconTheme": "material-icon-theme",
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "python.createEnvironment.trigger": "off",
+  "chat.commandCenter.enabled": false,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
+}
