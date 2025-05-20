@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changeCurrentpassword,
   getCurrentUser,
+  getUserChannelProfile,
   getWatchHistory,
   loginUser,
   logoutuser,
@@ -51,7 +52,7 @@ router
   .patch(isLoggedIn, upload.single("coverImage"), updateCoverImage);
 
 ///c/:username used to get current user details
-router.route("/c/:username").get(isLoggedIn, getCurrentUser);
+router.route("/c/:username").get(isLoggedIn, getUserChannelProfile);
 
 router.route("/watch-history").get(isLoggedIn, getWatchHistory);
 

@@ -207,8 +207,8 @@ const logoutuser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user?._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1, //this will remove field from  document
       },
     },
     {
@@ -304,7 +304,7 @@ const changeCurrentpassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(200, req.user, "current user fetched successfully");
+    .json(new ApiResponse(200, req.user, "current user fetched successfully"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -439,7 +439,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             else: false,
           },
         },
-        
       },
     },
     {
@@ -455,71 +454,70 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
   if (!channel?.length) {
-    throw new ApiError(404, "channel does not exists")
-}
+    throw new ApiError(404, "channel does not exists");
+  }
 
-return res
-.status(200)
-.json(
-    new ApiResponse(200, channel[0], "User channel fetched successfully")
-)
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully"),
+    );
 });
 
-const getWatchHistory = asyncHandler (async (req,res)=>{
+const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
-      $match : {
+      $match: {
         // because mongo db gives _id in string format son we need to convert it into object id
-        _id : new mongoose.Types.ObjectId(req.user._id)
-      }
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
     },
     {
-      $lookup : {
-        from : "videos",  //in database Video is converted into videos 
-        localField : "watchHistory",
-        foreignField : "_id",
-        as : "watchHistory",
-        pipeline : [
+      $lookup: {
+        from: "videos", //in database Video is converted into videos
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
           {
-            $lookup : {
-              from : "users",
-              localField : "owner",
-              foreignField : "_id",
-              as  : "owner",
-              pipeline : [
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
                 {
-                  $project : {
-                    fullName : 1,// 1 means include this field
-                    username : 1,
-                    avatar : 1
-
-                  }
-                }
-              ]
-            }
+                  $project: {
+                    fullName: 1, // 1 means include this field
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
           },
           {
-            $addFields : {
-              owner : {
-                $first : "$owner"
-              }
-            }
-          }
-        ]
-      }
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
-    }
-  ])
-
-  return res.status(200)
-  .json(
-    new ApiResponse(
-      200,
-      user[0].watchHistory,
-      "Watchhistory fetched Successfully"
-    )
-  )
-})
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watchhistory fetched Successfully",
+      ),
+    );
+});
 
 export {
   registerUser,
@@ -532,5 +530,5 @@ export {
   updateAvatar,
   updateCoverImage,
   getUserChannelProfile,
-  getWatchHistory
+  getWatchHistory,
 };
