@@ -17,6 +17,8 @@ import { isLoggedIn } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+
+//  USer routes
 router.route("/register").post(
   upload.fields([
     {
@@ -55,5 +57,8 @@ router
 router.route("/c/:username").get(isLoggedIn, getUserChannelProfile);
 
 router.route("/watch-history").get(isLoggedIn, getWatchHistory);
+
+
+
 
 export default router;

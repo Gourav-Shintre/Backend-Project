@@ -141,7 +141,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // send cookies of tokens
 
   const { username, email, password } = req.body;
-  console.log(email, "email");
+  // console.log(email, "email");
 
   if (!username && !email) {
     throw new ApiError(400, "username or email is required");
@@ -160,11 +160,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const isPasswordValid = await user.comparePassword(password);
-  console.log("Entered:", password);
-  console.log("Stored:", user.password);
-
-  console.log("isPasswordValid:", await user.comparePassword("Gour@v02"));
-
+    
   if (!isPasswordValid) {
     throw new ApiError(401, "Password is incorrect");
   }
